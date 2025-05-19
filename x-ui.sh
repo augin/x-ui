@@ -48,20 +48,6 @@ for service_name in "$@"; do
 done
 }
 
-##############################Uninstall##################################################################
-if [[ "${UNINSTALL}" == *"y"* ]]; then
-	echo "python3-certbot-nginx nginx nginx-full nginx-core nginx-common nginx-extras tor" | xargs -n 1 $Pak -y remove
-	for service in nginx tor x-ui warp-plus xray; do
-		systemctl stop "$service" > /dev/null 2>&1
-		systemctl disable "$service" > /dev/null 2>&1
-	done
-	#bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release.sh)" @ remove --purge
- 	rm -rf /etc/warp-plus/ /etc/nginx/sites-enabled/*
-	crontab -l | grep -v "nginx\|systemctl\|x-ui" | crontab -	
-	command -v x-ui &> /dev/null && printf 'y\n' | x-ui uninstall
-	
-	clear && msg_ok "Completely Uninstalled!" && exit 1
-fi
 ##############################Domain Validations#########################################################
 while [[ -z $(echo "$domain" | tr -d '[:space:]') ]]; do
 	read -rp $'\e[1;32;40m Enter available subdomain (sub.domain.tld): \e[0m' domain
@@ -104,12 +90,12 @@ IP6=$(ip route get 2620:fe::fe 2>&1 | grep -Po -- 'src \K\S*')
 [[ $IP4 =~ $IP4_REGEX ]] || IP4=$(curl -s ipv4.icanhazip.com);
 [[ $IP6 =~ $IP6_REGEX ]] || IP6=$(curl -s ipv6.icanhazip.com);
 ##############################Install SSL################################################################
-certbot certonly --standalone --non-interactive --force-renewal --agree-tos --register-unsafely-without-email --cert-name "$MainDomain" -d "$domain"
-if [[ ! -d "/etc/letsencrypt/live/${MainDomain}/" ]]; then
- 	systemctl start nginx >/dev/null 2>&1
-	msg_err "$MainDomain SSL failed! Check Domain/IP! Exceeded limit!? Try another domain or VPS!" && exit 1
-fi
-
+#certbot certonly --standalone --non-interactive --force-renewal --agree-tos --register-unsafely-without-email --cert-name "$MainDomain" -d "$domain"
+#if [[ ! -d "/etc/letsencrypt/live/${MainDomain}/" ]]; then
+# 	systemctl start nginx >/dev/null 2>&1
+#	msg_err "$MainDomain SSL failed! Check Domain/IP! Exceeded limit!? Try another domain or VPS!" && exit 1
+#fi
+#
 ######################################## add_slashes /webBasePath/ #####################################
 add_slashes() {
     [[ "$1" =~ ^/ ]] || set -- "/$1" ; [[ "$1" =~ /$ ]] || set -- "$1/"
