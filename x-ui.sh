@@ -425,7 +425,7 @@ tasks=(
 )
 crontab -l | grep -qE "x-ui" || { printf "%s\n" "${tasks[@]}" | crontab -; }
 ##################################Show Details##########################################################
-if systemctl is-active --quiet x-ui || command -v x-ui &> /dev/null; then clear
+if systemctl is-active --quiet x-ui || command -v x-ui &> /dev/null; then 
 	printf '0\n' | x-ui | grep --color=never -i ':' | awk '{print "\033[1;37;40m" $0 "\033[0m"}'
 	hrline
  	nginx -T | grep -i 'configuration file /etc/nginx/sites-enabled/'  | sed 's/.*configuration file //'  | tr -d ':' | awk '{print "\033[1;32;40m" $0 "\033[0m"}'
