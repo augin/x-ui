@@ -120,55 +120,7 @@ if [[ ! -d "/etc/letsencrypt/live/${MainDomain}/" ]]; then
  	systemctl start nginx >/dev/null 2>&1
 	msg_err "$MainDomain SSL failed! Check Domain/IP! Exceeded limit!? Try another domain or VPS!" && exit 1
 fi
-################################# Access to configs only with cloudflare#################################
-mkdir -p /etc/nginx/sites-{available,enabled} /var/log/nginx /var/www /var/www/html
-rm -rf "/etc/nginx/default.d"
 
-nginxusr="www-data"
-id -u "$nginxusr" &>/dev/null || nginxusr="nginx"
-
-cat > "/etc/nginx/nginx.conf" << EOF
-user $nginxusr;
-worker_processes auto;
-pid /run/nginx.pid;
-include /etc/nginx/modules-enabled/*.conf;
-worker_rlimit_nofile 65535;
-events { worker_connections 65535; use epoll; multi_accept on; }
-http {
-	access_log /var/log/nginx/access.log;
-	error_log /var/log/nginx/error.log;
-	gzip on;sendfile on;tcp_nopush on;
-	types_hash_max_size 4096;
-	default_type application/octet-stream;
-	include /etc/nginx/*.types;
-	include /etc/nginx/conf.d/*.conf;
-	include /etc/nginx/sites-enabled/*;
-}
-EOF
-
-rm -f "/etc/nginx/cloudflareips.sh"
-cat << 'EOF' >> /etc/nginx/cloudflareips.sh
-#!/bin/bash
-[[ $EUID -ne 0 ]] && exec sudo "$0" "$@"
-rm -f "/etc/nginx/conf.d/cloudflare_real_ips.conf" "/etc/nginx/conf.d/cloudflare_whitelist.conf"
-CLOUDFLARE_REAL_IPS_PATH=/etc/nginx/conf.d/cloudflare_real_ips.conf
-CLOUDFLARE_WHITELIST_PATH=/etc/nginx/conf.d/cloudflare_whitelist.conf
-echo "geo \$realip_remote_addr \$cloudflare_ip {
-	default 0;" >> $CLOUDFLARE_WHITELIST_PATH
-for type in v4 v6; do
-	echo "# IP$type"
-	for ip in `curl https://www.cloudflare.com/ips-$type`; do
-		echo "set_real_ip_from $ip;" >> $CLOUDFLARE_REAL_IPS_PATH;
-		echo "	$ip 1;" >> $CLOUDFLARE_WHITELIST_PATH;
-	done
-done
-echo "real_ip_header X-Forwarded-For;" >> $CLOUDFLARE_REAL_IPS_PATH
-echo "}" >> $CLOUDFLARE_WHITELIST_PATH
-EOF
-
-sudo bash "/etc/nginx/cloudflareips.sh" > /dev/null 2>&1;
-[[ "${CFALLOW}" == *"on"* ]] && CF_IP="" || CF_IP="#"
-[[ "${Secure}" == *"yes"* ]] && Secure="" || Secure="#"
 ######################################## add_slashes /webBasePath/ #####################################
 add_slashes() {
     [[ "$1" =~ ^/ ]] || set -- "/$1" ; [[ "$1" =~ /$ ]] || set -- "$1/"
@@ -320,51 +272,12 @@ if ! systemctl start nginx > /dev/null 2>&1 || ! nginx -t &>/dev/null || nginx -
 fi
 systemctl is-enabled x-ui || sudo systemctl enable x-ui
 x-ui start > /dev/null 2>&1
-############################################Warp Plus (MOD)#############################################
-systemctl stop warp-plus > /dev/null 2>&1
-rm -rf ~/.cache/warp-plus /etc/warp-plus/
-mkdir -p /etc/warp-plus/
-chmod 777 /etc/warp-plus/
-## Download Cloudflare Warp Mod (wireguard)
-warpPlusDL="https://github.com/bepass-org/warp-plus/releases/latest/download/warp-plus_linux"
-
-case "$(uname -m | tr '[:upper:]' '[:lower:]' | tr -d '[:space:]')" in
-	x86_64 | amd64) wppDL="${warpPlusDL}-amd64.zip" ;;
-	aarch64 | arm64) wppDL="${warpPlusDL}-arm64.zip" ;;
-	armv*) wppDL="${warpPlusDL}-arm7.zip" ;;
-	mips) wppDL="${warpPlusDL}-mips.zip" ;;
-	mips64) wppDL="${warpPlusDL}-mips64.zip" ;;
-	mips64le) wppDL="${warpPlusDL}-mips64le.zip" ;;
-	mipsle*) wppDL="${warpPlusDL}-mipsle.zip" ;;
-	riscv*) wppDL="${warpPlusDL}-riscv64.zip" ;;
-	*) wppDL="${warpPlusDL}-amd64.zip" ;;
-esac  
-
-wget --quiet -P /etc/warp-plus/ "${wppDL}" || curl --output-dir /etc/warp-plus/ -LOs "${wppDL}" 
-find "/etc/warp-plus/" -name '*.zip' | xargs -I {} sh -c 'unzip -d "$0" "{}" && rm -f "{}"' "/etc/warp-plus/"
-cat > /etc/systemd/system/warp-plus.service << EOF
-[Unit]
-Description=warp-plus service
-After=network.target nss-lookup.target
-
-[Service]
-WorkingDirectory=/etc/warp-plus/
-ExecStart=/etc/warp-plus/warp-plus
-ExecStop=/bin/kill -TERM \$MAINPID
-ExecReload=/bin/kill -HUP \$MAINPID
-Restart=on-abort
-
-[Install]
-WantedBy=multi-user.target
-EOF
 
 ######################cronjob for ssl/reload service/cloudflareips######################################
 tasks=(
   "0 0 * * * sudo su -c 'x-ui restart > /dev/null 2>&1 '"
   "0 0 * * * sudo su -c 'nginx -s reload 2>&1 | grep -q error && { pkill nginx || killall nginx; nginx -c /etc/nginx/nginx.conf; nginx -s reload; }'"
   "0 0 1 * * sudo su -c 'certbot renew --nginx --force-renewal --non-interactive --post-hook \"nginx -s reload\" > /dev/null 2>&1'"
-  "* * * * * sudo su -c '[[ \"\$(curl -s --socks5-hostname 127.0.0.1:8086 checkip.amazonaws.com)\" =~ ^((([0-9]{1,3}\.){3}[0-9]{1,3})|(([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}))\$ ]] || systemctl restart warp-plus'"
-  "0 0 * * 0 sudo bash /etc/nginx/cloudflareips.sh > /dev/null 2>&1"
 )
 crontab -l | grep -qE "x-ui" || { printf "%s\n" "${tasks[@]}" | crontab -; }
 ##################################Show Details##########################################################
