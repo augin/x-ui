@@ -107,13 +107,13 @@ fi
 ##############################Uninstall##################################################################
 if [[ "${UNINSTALL}" == *"y"* ]]; then
 	echo "python3-certbot-nginx nginx nginx-full nginx-core nginx-common nginx-extras tor" | xargs -n 1 $Pak -y remove
-	for service in nginx tor x-ui warp-plus v2raya xray; do
+	for service in nginx tor x-ui warp-plus xray; do
 		systemctl stop "$service" > /dev/null 2>&1
 		systemctl disable "$service" > /dev/null 2>&1
 	done
 	#bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release.sh)" @ remove --purge
  	rm -rf /etc/warp-plus/ /etc/nginx/sites-enabled/*
-	crontab -l | grep -v "nginx\|systemctl\|x-ui\|v2ray" | crontab -	
+	crontab -l | grep -v "nginx\|systemctl\|x-ui" | crontab -	
 	command -v x-ui &> /dev/null && printf 'y\n' | x-ui uninstall
 	
 	clear && msg_ok "Completely Uninstalled!" && exit 1
@@ -303,16 +303,6 @@ server {
 		proxy_pass http://127.0.0.1:$PORT;
 		break;
 	}
-	#v2ray-ui
-	location /${RNDSTR2}/ {
-		${Secure}auth_basic "Restricted Access";
-		${Secure}auth_basic_user_file /etc/nginx/.htpasswd;
-		proxy_set_header Host \$host;
-		proxy_set_header X-Real-IP \$remote_addr;
-		proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-		proxy_pass http://127.0.0.1:2017/;
-		break;
-	}
 	#Subscription Path (simple/encode)
 	location ~ ^/(?<fwdport>\d+)/sub/(?<fwdpath>.*)\$ {
 		if (\$hack = 1) {return 404;}
@@ -411,13 +401,10 @@ Restart=on-abort
 [Install]
 WantedBy=multi-user.target
 EOF
-##########################################Install v2ray-core + v2rayA-webui#############################
-#bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release.sh)" @ install
-sudo sh -c "$(wget -qO- https://github.com/v2rayA/v2rayA-installer/raw/main/installer.sh)" @ --with-xray
-service_enable "v2raya" "warp-plus"
+
 ######################cronjob for ssl/reload service/cloudflareips######################################
 tasks=(
-  "0 0 * * * sudo su -c 'x-ui restart > /dev/null 2>&1 && systemctl reload v2raya warp-plus tor'"
+  "0 0 * * * sudo su -c 'x-ui restart > /dev/null 2>&1 '"
   "0 0 * * * sudo su -c 'nginx -s reload 2>&1 | grep -q error && { pkill nginx || killall nginx; nginx -c /etc/nginx/nginx.conf; nginx -s reload; }'"
   "0 0 1 * * sudo su -c 'certbot renew --nginx --force-renewal --non-interactive --post-hook \"nginx -s reload\" > /dev/null 2>&1'"
   "* * * * * sudo su -c '[[ \"\$(curl -s --socks5-hostname 127.0.0.1:8086 checkip.amazonaws.com)\" =~ ^((([0-9]{1,3}\.){3}[0-9]{1,3})|(([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}))\$ ]] || systemctl restart warp-plus'"
@@ -442,14 +429,10 @@ if systemctl is-active --quiet x-ui || command -v x-ui &> /dev/null; then
   	msg_err  "XrayUI Panel [IP:PORT/PATH]"
 	[[ -n "$IP4" && "$IP4" =~ $IP4_REGEX ]] && msg_inf "IPv4: http://$IP4:$PORT$RNDSTR"
 	[[ -n "$IP6" && "$IP6" =~ $IP6_REGEX ]] && msg_inf "IPv6: http://[$IP6]:$PORT$RNDSTR"
- 	msg_err "\n V2rayA Panel [IP:PORT]"
-  	[[ -n "$IP4" && "$IP4" =~ $IP4_REGEX ]] && msg_inf "IPv4: http://$IP4:2017/"
-	[[ -n "$IP6" && "$IP6" =~ $IP6_REGEX ]] && msg_inf "IPv6: http://[$IP6]:2017/"
 	hrline
 	sudo sh -c "echo -n '${XUIUSER}:' >> /etc/nginx/.htpasswd && openssl passwd -apr1 '${XUIPASS}' >> /etc/nginx/.htpasswd"
  	msg_ok "Admin Panel [SSL]:\n"
 	msg_inf "XrayUI: https://${domain}${RNDSTR}"
-	msg_inf "V2rayA: https://${domain}/${RNDSTR2}/\n"
 	msg "Username: $XUIUSER\n Password: $XUIPASS"
 	hrline
 	msg_war "Note: Save This Screen!"	
