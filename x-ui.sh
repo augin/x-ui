@@ -55,7 +55,7 @@ done
 
 domain=$(echo "$domain" 2>&1 | tr -d '[:space:]' )
 SubDomain=$(echo "$domain" 2>&1 | sed 's/^[^ ]* \|\..*//g')
-MainDomain=$(echo "$domain" 2>&1 | sed 's/.*\.\([^.]*\..*\)$/\1/')
+MainDomain=${domain} #(echo "$domain" 2>&1 | sed 's/.*\.\([^.]*\..*\)$/\1/')
 
 if [[ "${SubDomain}.${MainDomain}" != "${domain}" ]] ; then
 	MainDomain=${domain}
