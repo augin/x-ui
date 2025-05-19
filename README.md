@@ -8,3 +8,12 @@ host: domain
 path: /PORT/RANDOM_STRING
 
 External Proxy: TLS :  Domain : 443
+
+
+subscription:
+
+ReversProxy URI: https://domain/PORT/sub/
+
+json:
+
+ReversProxy URI: https://domain/PORT/json/
