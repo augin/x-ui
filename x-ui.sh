@@ -48,11 +48,11 @@ for service_name in "$@"; do
 done
 }
 ####################################UFW Rules################################################################
-if [[ -n "$ENABLEUFW" ]]; then
-	sudo $(command -v apt || echo dnf) -y install ufw && ufw reset && echo ssh ftp http https mysql 53 2052 2053 2082 2083 2086 2087 2095 2096 3389 5900 8443 8880 | xargs -n 1 sudo ufw allow && sudo ufw enable
-	msg_inf "UFW settings changed!"; exit 1
-fi
-
+ufw disable
+ufw allow 22/tcp
+ufw allow 80/tcp
+ufw allow 443/tcp
+ufw --force enable
 ##############################Uninstall##################################################################
 if [[ "${UNINSTALL}" == *"y"* ]]; then
 	echo "python3-certbot-nginx nginx nginx-full nginx-core nginx-common nginx-extras tor" | xargs -n 1 $Pak -y remove
