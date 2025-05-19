@@ -177,8 +177,8 @@ server {
 	proxy_intercept_errors on;
 	#X-UI Admin Panel
 	location $RNDSTR {
-		${Secure}auth_basic "Restricted Access";
-		${Secure}auth_basic_user_file /etc/nginx/.htpasswd;
+		#auth_basic "Restricted Access";
+		#auth_basic_user_file /etc/nginx/.htpasswd;
 		proxy_redirect off;
 		proxy_set_header Host \$host;
 		proxy_set_header X-Real-IP \$remote_addr;
