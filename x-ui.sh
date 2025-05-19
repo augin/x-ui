@@ -211,9 +211,9 @@ server {
 	#Xray Config Path
 	location ~ ^/(?<fwdport>\d+)/(?<fwdpath>.*)\$ {
 		if (\$hack = 1) {return 404;}
-		${CF_IP}if (\$cloudflare_ip != 1) {return 404;}
-		${CLIMIT}if (\$http_cf_ipcountry !~* "${CountryAllow}"){ return 404; }
-		${Secure}if (\$http_user_agent ~* "(bot|clash|fair|go-http|hiddify|java|neko|node|proxy|python|ray|sager|sing|tunnel|v2box|vpn)") { return 404; }
+		#if (\$cloudflare_ip != 1) {return 404;}
+		#if (\$http_cf_ipcountry !~* "${CountryAllow}"){ return 404; }
+		#if (\$http_user_agent ~* "(bot|clash|fair|go-http|hiddify|java|neko|node|proxy|python|ray|sager|sing|tunnel|v2box|vpn)") { return 404; }
 		client_max_body_size 0;
 		client_body_timeout 1d;
 		grpc_read_timeout 1d;
