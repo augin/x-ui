@@ -167,6 +167,7 @@ if ! systemctl is-active --quiet x-ui || ! command -v x-ui &> /dev/null; then
 	service_enable "x-ui"
  	UPDATE_XUIDB
 fi
+/usr/local/x-ui/x-ui setting -username "${config_username}" -password "${config_password}" -port "${panel_port}" -webBasePath "${panel_path}"
 ###################################Get Installed XUI Port/Path##########################################
 if [[ -f $XUIDB ]]; then
 	x-ui stop > /dev/null 2>&1
@@ -320,10 +321,11 @@ if systemctl is-active --quiet x-ui || command -v x-ui &> /dev/null; then
 	[[ -n "$IP4" && "$IP4" =~ $IP4_REGEX ]] && msg_inf "IPv4: http://$IP4:$PORT$RNDSTR"
 	[[ -n "$IP6" && "$IP6" =~ $IP6_REGEX ]] && msg_inf "IPv6: http://[$IP6]:$PORT$RNDSTR"
 	hrline
-	sudo sh -c "echo -n '${XUIUSER}:' >> /etc/nginx/.htpasswd && openssl passwd -apr1 '${XUIPASS}' >> /etc/nginx/.htpasswd"
- 	msg_ok "Admin Panel [SSL]:\n"
-	msg_inf "XrayUI: https://${domain}${RNDSTR}"
-	msg "Username: $XUIUSER\n Password: $XUIPASS"
+        msg_inf "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
+	msg_inf "X-UI Secure Panel: https://${domain}/${panel_path}/\n"
+ 	echo -e "Username:  ${config_username} \n" 
+	echo -e "Password:  ${config_password} \n" 
+	msg_inf "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -"
 	hrline
 	msg_war "Note: Save This Screen!"	
 else
