@@ -4,4 +4,5 @@ sudo su -c "apt -y install wget;bash <(wget -qO- raw.githubusercontent.com/augin
 
 
 host: domain
+
 path: /PORT/RANDOM_STRING
