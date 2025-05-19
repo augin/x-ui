@@ -47,12 +47,7 @@ for service_name in "$@"; do
 	systemctl start "$service_name" > /dev/null 2>&1
 done
 }
-####################################UFW Rules################################################################
-ufw disable
-ufw allow 22/tcp
-ufw allow 80/tcp
-ufw allow 443/tcp
-ufw --force enable
+
 ##############################Uninstall##################################################################
 if [[ "${UNINSTALL}" == *"y"* ]]; then
 	echo "python3-certbot-nginx nginx nginx-full nginx-core nginx-common nginx-extras tor" | xargs -n 1 $Pak -y remove
@@ -280,6 +275,12 @@ tasks=(
   "0 0 1 * * sudo su -c 'certbot renew --nginx --force-renewal --non-interactive --post-hook \"nginx -s reload\" > /dev/null 2>&1'"
 )
 crontab -l | grep -qE "x-ui" || { printf "%s\n" "${tasks[@]}" | crontab -; }
+####################################UFW Rules################################################################
+ufw disable
+ufw allow 22/tcp
+ufw allow 80/tcp
+ufw allow 443/tcp
+ufw --force enable
 ##################################Show Details##########################################################
 if systemctl is-active --quiet x-ui || command -v x-ui &> /dev/null; then 
 	printf '0\n' | x-ui | grep --color=never -i ':' | awk '{print "\033[1;37;40m" $0 "\033[0m"}'
