@@ -75,9 +75,9 @@ if [[ "${SubDomain}.${MainDomain}" != "${domain}" ]] ; then
 	MainDomain=${domain}
 fi
 ###############################Install Packages#########################################################
+ufw disable
 apt -y update
 apt -y install curl wget jq bash sudo nginx-full certbot python3-certbot-nginx sqlite3 ufw psmisc
-ufw disable
 systemctl daemon-reload && systemctl enable --now nginx
 systemctl stop nginx
 fuser -k 80/tcp 80/udp 443/tcp 443/udp 2>/dev/null
