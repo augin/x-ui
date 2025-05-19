@@ -52,58 +52,7 @@ if [[ -n "$ENABLEUFW" ]]; then
 	sudo $(command -v apt || echo dnf) -y install ufw && ufw reset && echo ssh ftp http https mysql 53 2052 2053 2082 2083 2086 2087 2095 2096 3389 5900 8443 8880 | xargs -n 1 sudo ufw allow && sudo ufw enable
 	msg_inf "UFW settings changed!"; exit 1
 fi
-##############################TOR Change Region Country #####################################################
-#if [[ -n "$TorCountry" ]]; then
-#	TorCountry=$(echo "$TorCountry" | tr '[:lower:]' '[:upper:]')
-#	[[ "$TorCountry" == "XX" ]] || [[ ! "$TorCountry" =~ ^[A-Z]{2}$ ]] && TorCountry=$TorRandomCountry
-#	TorCountry=$(echo "$TorCountry" | tr '[:upper:]' '[:lower:]')
-#	sudo cp -f /etc/tor/torrc /etc/tor/torrc.bak
-#	if grep -q "^ExitNodes" /etc/tor/torrc; then
-#		sudo sed -i "s/^ExitNodes.*/ExitNodes {$TorCountry}/" /etc/tor/torrc
-#	else
-#		echo "ExitNodes {$TorCountry}" | sudo tee -a /etc/tor/torrc
-#	fi
-#	if grep -q "^StrictNodes" /etc/tor/torrc; then
-#		sudo sed -i "s/^StrictNodes.*/StrictNodes 1/" /etc/tor/torrc
-#	else
-#		echo "StrictNodes 1" | sudo tee -a /etc/tor/torrc
-#	fi
-#	systemctl restart tor
-#	msg "\nEnter after 10 seconds:\ncurl --socks5-hostname 127.0.0.1:9050 https://ipapi.co/json/\n"
-#	msg_inf "Tor settings changed!"
-#	exit 1
-#fi
-##############################WARP/Psiphon Change Region Country ############################################
-#if [[ -n "$WarpCfonCountry" || -n "$WarpLicKey" || -n "$CleanKeyCfon" ]]; then
-#WarpCfonCountry=$(echo "$WarpCfonCountry" | tr '[:lower:]' '[:upper:]')
-#cfonval=" --cfon --country $WarpCfonCountry";
-#[[ "$WarpCfonCountry" == "XX" ]] && cfonval=" --cfon --country ${Random_country}"
-#[[ "$WarpCfonCountry" =~ ^[A-Z]{2}$ ]] || cfonval="";
-#wrpky=" --key $WarpLicKey";[[ -n "$WarpLicKey" ]] || wrpky="";
-#[[ -n "$CleanKeyCfon" ]] && { cfonval=""; wrpky=""; }
-#######
-#cat > /etc/systemd/system/warp-plus.service << EOF
-#[Unit]
-#Description=warp-plus service
-#After=network.target nss-lookup.target
-#
-#[Service]
-#WorkingDirectory=/etc/warp-plus/
-#ExecStart=/etc/warp-plus/warp-plus --scan${cfonval}${wrpky}
-#ExecStop=/bin/kill -TERM \$MAINPID
-#ExecReload=/bin/kill -HUP \$MAINPID
-#Restart=on-abort
-#
-#[Install]
-#WantedBy=multi-user.target
-#EOF
-#######
-#rm -rf ~/.cache/warp-plus
-#service_enable "warp-plus"; 
-#3msg "\nEnter after 10 seconds:\ncurl --socks5-hostname 127.0.0.1:8086 https://ipapi.co/json/\n"
-#msg_inf "warp-plus settings changed!"
-#exit 1
-#fi
+
 ##############################Uninstall##################################################################
 if [[ "${UNINSTALL}" == *"y"* ]]; then
 	echo "python3-certbot-nginx nginx nginx-full nginx-core nginx-common nginx-extras tor" | xargs -n 1 $Pak -y remove
@@ -131,11 +80,18 @@ if [[ "${SubDomain}.${MainDomain}" != "${domain}" ]] ; then
 	MainDomain=${domain}
 fi
 ###############################Install Packages#########################################################
-$Pak -y update
-for pkg in epel-release cronie psmisc unzip curl nginx nginx-full certbot python3-certbot-nginx sqlite sqlite3 jq openssl tor tor-geoipdb; do
-  dpkg -l "$pkg" &> /dev/null || rpm -q "$pkg" &> /dev/null || $Pak -y install "$pkg"
-done
-service_enable "nginx" "cron" "crond"
+ufw disable
+if [[ ${INSTALL} == *"y"* ]]; then
+
+	apt -y update
+
+        apt -y install curl wget jq bash sudo nginx-full certbot python3-certbot-nginx sqlite3 ufw
+
+        systemctl daemon-reload && systemctl enable --now nginx
+	
+fi
+systemctl stop nginx
+fuser -k 80/tcp 80/udp 443/tcp 443/udp 2>/dev/null
 ############################### Get nginx Ver and Stop ##################################################
 vercompare() { 
 	if [ "$1" = "$2" ]; then echo "E"; return; fi
