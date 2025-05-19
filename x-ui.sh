@@ -46,14 +46,6 @@ xhttp_path=$(tr -dc A-Za-z0-9 </dev/urandom | head -c "$(shuf -i 6-12 -n 1)")
 config_username=$(gen_random_string 10)
 config_password=$(gen_random_string 10)
 
-##################################Random Port and Path ###################################################
-#mkdir -p ${HOME}/.cache
-#Pak=$(command -v apt||echo dnf);
-#RNDSTR=$(tr -dc A-Za-z0-9 </dev/urandom | head -c "$(shuf -i 6-12 -n1)");
-#RNDSTR2=$(tr -dc A-Za-z0-9 </dev/urandom | head -c "$(shuf -i 6-12 -n1)");
-#while true; do PORT=$((RANDOM%30000+30000)); nc -z 127.0.0.1 "$PORT" &>/dev/null || break; done
-#Random_country=$(echo ATBEBGBRCACHCZDEDKEEESFIFRGBHRHUIEINITJPLVNLNOPLPTRORSSESGSKUAUS | fold -w2 | shuf -n1)
-#TorRandomCountry=$(echo ATBEBGBRCACHCZDEDKEEESFIFRGBHRHUIEINITJPLVNLNOPLPTRORSSESGSKUAUS | fold -w2 | shuf -n1)
 ##################################Variables###############################################################
 XUIDB="/etc/x-ui/x-ui.db";domain="";UNINSTALL="x";PNLNUM=1;CFALLOW="off";NOPATH="";RNDTMPL="n";CLIMIT="#"
 WarpCfonCountry="";WarpLicKey="";CleanKeyCfon="";TorCountry="";Secure="no";ENABLEUFW="";VERSION="last";CountryAllow="XX"
@@ -63,7 +55,6 @@ while [ "$#" -gt 0 ]; do
   	-country) CountryAllow="$2"; shift 2;;
   	-xuiver) VERSION="$2"; shift 2;;
   	-ufw) ENABLEUFW="$2"; shift 2;;
-	-secure) Secure="$2"; shift 2;;
 	-TorCountry) TorCountry="$2"; shift 2;;
 	-WarpCfonCountry) WarpCfonCountry="$2"; shift 2;;
 	-WarpLicKey) WarpLicKey="$2"; shift 2;;
