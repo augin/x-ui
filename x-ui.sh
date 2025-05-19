@@ -153,6 +153,8 @@ if echo "$CountryAllow" | grep -Eq '^[A-Z]{2}(\|[A-Z]{2})*$'; then
 	CLIMIT=$( [[ "$CountryAllow" == "XX" ]] && echo "#" || echo "" )
 fi
 #################################Nginx Config###########################################################
+rm -rf /etc/nginx/sites-enabled/*
+rm -rf /etc/nginx/sites-available/*
 cat > "/etc/nginx/sites-available/$MainDomain" << EOF
 server {
 	server_tokens off;
