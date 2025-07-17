@@ -187,10 +187,14 @@ rm -rf /etc/nginx/sites-enabled/*
 rm -rf /etc/nginx/sites-available/*
 cat > "/etc/nginx/sites-available/$MainDomain" << EOF
 server {
+        listen 80;
+        listen [::]:80;
+        server_name $MainDomain *.$MainDomain;
+        return 301 https://$host$request_uri;
+}
+server {
 	server_tokens off;
 	server_name $MainDomain *.$MainDomain;
-	listen 80;
-	listen [::]:80;
 	listen 443 ssl${OLD_H2};
 	listen [::]:443 ssl${OLD_H2};
 	${NEW_H2}http2 on; http3 on;
