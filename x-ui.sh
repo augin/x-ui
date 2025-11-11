@@ -222,6 +222,13 @@ server {
 		proxy_pass http://127.0.0.1:$PORT;
 		break;
 	}
+    location ~ \.php$ {
+        try_files $uri =404;
+        fastcgi_pass unix:/var/run/php/php-fpm.sock;
+        fastcgi_index index.php;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        include fastcgi_params;
+    }
 	#Subscription Path (simple/encode)
 	location ~ ^/(?<fwdport>\d+)/sub/(?<fwdpath>.*)\$ {
 		if (\$hack = 1) {return 404;}
